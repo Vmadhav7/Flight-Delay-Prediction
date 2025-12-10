@@ -88,8 +88,8 @@ After running the pipeline, check:
 | Feature importance | `outputs/figures/feature_importance_*.png` |
 | Model comparison | `outputs/reports/model_comparison.csv` |
 
-![ROC](outputs/figures/roc_curves.png)
-<img src="outputs/figures/roc_curves.png" width="200">
+
+<img src="outputs/figures/roc_curves.png" width="500">
 
 ### Sample Performance (50K samples)
 
