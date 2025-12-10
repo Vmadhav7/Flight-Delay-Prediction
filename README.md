@@ -89,6 +89,7 @@ After running the pipeline, check:
 | Model comparison | `outputs/reports/model_comparison.csv` |
 
 ![ROC](outputs/figures/roc_curves.png)
+<img src="outputs/figures/roc_curves.png" width="200">
 
 ### Sample Performance (50K samples)
 
