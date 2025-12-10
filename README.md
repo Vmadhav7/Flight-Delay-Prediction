@@ -87,7 +87,7 @@ After running the pipeline, check:
 | ROC curves | `outputs/figures/roc_curves.png` |
 | Feature importance | `outputs/figures/feature_importance_*.png` |
 | Model comparison | `outputs/reports/model_comparison.csv` |
-
+![ROC] (https://github.com/Vmadhav7/Flight-Delay-Prediction/blob/main/outputs/figures/roc_curves.png)
 ### Sample Performance (50K samples)
 
 | Model | Accuracy | F1 Score | ROC-AUC |
