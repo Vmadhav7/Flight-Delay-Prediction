@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Delay Prediction - Results Dashboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0f;
+            min-height: 100vh;
+            color: #e8e8e8;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(0, 212, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(123, 44, 191, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(0, 255, 136, 0.05) 0%, transparent 70%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 50px 30px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 3.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff 0%, #7b2cbf 50%, #00ff88 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 1.15rem;
+            font-weight: 400;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 30px 25px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 212, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-value {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #a0a0a0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 500;
+        }
+
+        /* Cards */
+        .card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            padding: 35px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(20px);
+        }
+
+        .card h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card h2::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, #00d4ff, #7b2cbf);
+            border-radius: 2px;
+        }
+
+        /* Model Comparison Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 18px 25px;
+            text-align: center;
+        }
+
+        .results-table th {
+            background: rgba(0, 212, 255, 0.1);
+            color: #00d4ff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .results-table td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .results-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .results-table td:first-child {
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .best-model td {
+            background: rgba(0, 255, 136, 0.08);
+        }
+
+        .best-model td:first-child {
+            border-left: 4px solid #00ff88;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            font-size: 1.05rem;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .high-value {
+            color: #00ff88;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 14px;
+            border-radius: 30px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-left: 10px;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 255, 136, 0.1));
+            color: #00ff88;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        /* Visualizations Grid */
+        .viz-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        .viz-card {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .viz-card:hover {
+            border-color: rgba(0, 212, 255, 0.2);
+            transform: scale(1.02);
+        }
+
+        .viz-card h3 {
+            color: #9ca3af;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .viz-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        /* Full Width Visualization */
+        .full-viz {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .full-viz img {
+            max-width: 90%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Two Column Layout */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        footer p {
+            color: #4b5563;
+            font-size: 0.9rem;
+        }
+
+        .tech-stack {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .tech-badge {
+            padding: 6px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .viz-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Flight Delay Prediction</h1>
+            <p class="subtitle">Machine Learning Classification Results</p>
+        </header>
+
+        <!-- Key Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">50K</div>
+                <div class="stat-label">Samples</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">85.4%</div>
+                <div class="stat-label">Accuracy</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0.74</div>
+                <div class="stat-label">F1 Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Models</div>
+            </div>
+        </div>
+
+        <!-- Model Comparison -->
+        <div class="card">
+            <h2>Model Performance Comparison</h2>
+            <div class="table-wrapper">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Accuracy</th>
+                            <th>Precision</th>
+                            <th>Recall</th>
+                            <th>F1 Score</th>
+                            <th>ROC-AUC</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Logistic Regression</td>
+                            <td class="metric-value">83.9%</td>
+                            <td class="metric-value">78.9%</td>
+                            <td class="metric-value">66.2%</td>
+                            <td class="metric-value">0.72</td>
+                            <td class="metric-value">0.86</td>
+                        </tr>
+                        <tr class="best-model">
+                            <td>Random Forest<span class="badge">Best</span></td>
+                            <td class="metric-value high-value">85.4%</td>
+                            <td class="metric-value high-value">83.9%</td>
+                            <td class="metric-value high-value">65.9%</td>
+                            <td class="metric-value high-value">0.74</td>
+                            <td class="metric-value high-value">0.88</td>
+                        </tr>
+                        <tr>
+                            <td>XGBoost</td>
+                            <td class="metric-value">86.5%</td>
+                            <td class="metric-value">94.4%</td>
+                            <td class="metric-value">60.4%</td>
+                            <td class="metric-value">0.74</td>
+                            <td class="metric-value">0.89</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Confusion Matrices -->
+        <div class="card">
+            <h2>Confusion Matrices</h2>
+            <div class="viz-grid">
+                <div class="viz-card">
+                    <h3>Logistic Regression</h3>
+                    <img src="outputs/figures/confusion_matrix_logistic_regression.png" alt="Logistic Regression">
+                </div>
+                <div class="viz-card">
+                    <h3>Random Forest</h3>
+                    <img src="outputs/figures/confusion_matrix_random_forest.png" alt="Random Forest">
+                </div>
+                <div class="viz-card">
+                    <h3>XGBoost</h3>
+                    <img src="outputs/figures/confusion_matrix_xgboost.png" alt="XGBoost">
+                </div>
+            </div>
+        </div>
+
+        <!-- ROC & Feature Importance -->
+        <div class="two-col">
+            <div class="card">
+                <h2>ROC Curves</h2>
+                <div class="full-viz">
+                    <img src="outputs/figures/roc_curves.png" alt="ROC Curves">
+                </div>
+            </div>
+            <div class="card">
+                <h2>Feature Importance</h2>
+                <div class="full-viz">
+                    <img src="outputs/figures/feature_importance_random_forest.png" alt="Feature Importance">
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Flight Delay Prediction Pipeline</p>
+            <div class="tech-stack">
+                <span class="tech-badge">Python</span>
+                <span class="tech-badge">scikit-learn</span>
+                <span class="tech-badge">XGBoost</span>
+                <span class="tech-badge">Pandas</span>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>

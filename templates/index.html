@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Delay Prediction</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0f;
+            min-height: 100vh;
+            color: #e8e8e8;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(0, 212, 255, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(123, 44, 191, 0.12) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 30px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 25px;
+        }
+
+        .card h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 .icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #9ca3af;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+
+        .form-group select option {
+            background: #1a1a2e;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn-predict {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .btn-predict:active {
+            transform: translateY(0);
+        }
+
+        /* Result Display */
+        .result-box {
+            margin-top: 25px;
+            padding: 30px;
+            background: linear-gradient(145deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3));
+            border-radius: 16px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: none;
+        }
+
+        .result-box.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-probability {
+            font-size: 4rem;
+            font-weight: 700;
+            line-height: 1;
+            transition: color 0.3s ease;
+        }
+
+        .result-label {
+            font-size: 0.9rem;
+            color: #9ca3af;
+            margin-top: 8px;
+        }
+
+        .result-risk {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        /* Model Table */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 14px 18px;
+            text-align: center;
+        }
+
+        .results-table th {
+            background: rgba(0, 212, 255, 0.1);
+            color: #00d4ff;
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .results-table td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 0.95rem;
+        }
+
+        .results-table td:first-child {
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .best-row td {
+            background: rgba(0, 255, 136, 0.08);
+        }
+
+        .best-row td:first-child {
+            border-left: 3px solid #00ff88;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            margin-left: 8px;
+        }
+
+        /* Visualizations */
+        .viz-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .viz-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .viz-card h3 {
+            font-size: 0.9rem;
+            color: #9ca3af;
+            margin-bottom: 15px;
+        }
+
+        .viz-card img {
+            max-width: 100%;
+            border-radius: 10px;
+        }
+
+        /* Insights Section - Replacing Daily Risk */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .insight-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 14px;
+            padding: 20px;
+            border-left: 3px solid;
+        }
+
+        .insight-card.low {
+            border-color: #00ff88;
+        }
+
+        .insight-card.medium {
+            border-color: #ffd93d;
+        }
+
+        .insight-card.high {
+            border-color: #ff6b6b;
+        }
+
+        .insight-title {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .insight-value {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .insight-desc {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #4b5563;
+            font-size: 0.85rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1000px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .viz-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Flight Delay Prediction</h1>
+            <p class="subtitle">Interactive ML Dashboard</p>
+        </header>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">50K</div>
+                <div class="stat-label">Samples</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">85.4%</div>
+                <div class="stat-label">Accuracy</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0.74</div>
+                <div class="stat-label">F1 Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0.88</div>
+                <div class="stat-label">ROC-AUC</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <!-- Left Column - Prediction -->
+            <div>
+                <div class="card">
+                    <h2><span class="icon">P</span> Predict Delay</h2>
+                    <form id="predictionForm">
+                        <div class="form-group">
+                            <label>Origin Airport</label>
+                            <select name="origin" id="origin">
+                                {% for airport in airports %}
+                                <option value="{{ airport.IATA_CODE }}">{{ airport.IATA_CODE }} - {{ airport.AIRPORT }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Destination Airport</label>
+                            <select name="destination" id="destination">
+                                {% for airport in airports %}
+                                <option value="{{ airport.IATA_CODE }}" {% if loop.index==2 %}selected{% endif %}>{{
+                                    airport.IATA_CODE }} - {{ airport.AIRPORT }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Airline</label>
+                            <select name="airline" id="airline">
+                                {% for airline in airlines %}
+                                <option value="{{ airline.IATA_CODE }}">{{ airline.IATA_CODE }} - {{ airline.AIRLINE }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Hour (0-23)</label>
+                                <input type="number" name="hour" id="hour" min="0" max="23" value="14">
+                            </div>
+                            <div class="form-group">
+                                <label>Day (1-7)</label>
+                                <input type="number" name="day_of_week" id="day_of_week" min="1" max="7" value="3">
+                            </div>
+                            <div class="form-group">
+                                <label>Month</label>
+                                <input type="number" name="month" id="month" min="1" max="12" value="6">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-predict">Predict Delay Probability</button>
+                    </form>
+
+                    <div class="result-box" id="resultBox">
+                        <div class="result-probability" id="resultProb">--%</div>
+                        <div class="result-label">Delay Probability</div>
+                        <div class="result-risk" id="resultRisk">-</div>
+                    </div>
+                </div>
+
+                <!-- Insights Section -->
+                <div class="card">
+                    <h2><span class="icon">i</span> Quick Insights</h2>
+                    <div class="insights-grid">
+                        <div class="insight-card low">
+                            <div class="insight-title">Best Time to Fly</div>
+                            <div class="insight-value">6-8 AM</div>
+                            <div class="insight-desc">Lowest delay rates</div>
+                        </div>
+                        <div class="insight-card high">
+                            <div class="insight-title">Avoid</div>
+                            <div class="insight-value">5-7 PM</div>
+                            <div class="insight-desc">Peak delay hours</div>
+                        </div>
+                        <div class="insight-card low">
+                            <div class="insight-title">Best Day</div>
+                            <div class="insight-value">Tuesday</div>
+                            <div class="insight-desc">Least congested</div>
+                        </div>
+                        <div class="insight-card medium">
+                            <div class="insight-title">Busiest</div>
+                            <div class="insight-value">Friday</div>
+                            <div class="insight-desc">Highest delay risk</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Results -->
+            <div>
+                <!-- Model Comparison -->
+                <div class="card">
+                    <h2><span class="icon">M</span> Model Performance</h2>
+                    <div class="table-wrapper">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>Accuracy</th>
+                                    <th>Precision</th>
+                                    <th>Recall</th>
+                                    <th>F1</th>
+                                    <th>ROC-AUC</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for model_name, metrics in model_results.items() %}
+                                <tr class="{% if model_name == 'Random Forest' %}best-row{% endif %}">
+                                    <td>{{ model_name }}{% if model_name == 'Random Forest' %}<span
+                                            class="badge">Best</span>{% endif %}</td>
+                                    <td>{{ (metrics.accuracy * 100)|round(1) }}%</td>
+                                    <td>{{ (metrics.precision * 100)|round(1) }}%</td>
+                                    <td>{{ (metrics.recall * 100)|round(1) }}%</td>
+                                    <td>{{ metrics.f1|round(2) }}</td>
+                                    <td>{{ metrics.roc_auc|round(2) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Visualizations -->
+                <div class="card">
+                    <h2><span class="icon">V</span> Visualizations</h2>
+                    <div class="viz-grid">
+                        <div class="viz-card">
+                            <h3>ROC Curves</h3>
+                            <img src="/static/roc_curves.png" alt="ROC Curves" onerror="this.style.display='none'">
+                        </div>
+                        <div class="viz-card">
+                            <h3>Feature Importance</h3>
+                            <img src="/static/feature_importance.png" alt="Feature Importance"
+                                onerror="this.style.display='none'">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            Flight Delay Prediction Dashboard
+        </footer>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const btn = document.querySelector('.btn-predict');
+            btn.textContent = 'Predicting...';
+            btn.disabled = true;
+
+            const data = {
+                origin: document.getElementById('origin').value,
+                destination: document.getElementById('destination').value,
+                airline: document.getElementById('airline').value,
+                hour: parseInt(document.getElementById('hour').value),
+                day_of_week: parseInt(document.getElementById('day_of_week').value),
+                month: parseInt(document.getElementById('month').value)
+            };
+
+            console.log('Sending data:', data);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                console.log('Result:', result);
+
+                const resultBox = document.getElementById('resultBox');
+                const resultProb = document.getElementById('resultProb');
+                const resultRisk = document.getElementById('resultRisk');
+
+                resultBox.classList.add('show');
+                resultProb.textContent = result.probability + '%';
+                resultProb.style.color = result.risk_color;
+                resultRisk.textContent = result.risk_level + ' Risk';
+                resultRisk.style.background = result.risk_color + '20';
+                resultRisk.style.color = result.risk_color;
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Prediction failed. Check console for details.');
+            } finally {
+                btn.textContent = 'Predict Delay Probability';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>
