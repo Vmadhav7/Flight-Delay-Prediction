@@ -118,6 +118,3 @@ After running the pipeline, check:
 - matplotlib, seaborn - Visualization
 - joblib - Model persistence
 
-## License
-
-MIT License - Feel free to use for learning and portfolio purposes.
